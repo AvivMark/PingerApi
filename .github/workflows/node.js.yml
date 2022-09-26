@@ -3,6 +3,10 @@
 
 name: Node.js CI
 
+env:
+  HOSTSFILE: testHosts.json
+  PORT: 3000
+
 on:
   push:
     branches: [ "main" ]
@@ -26,6 +30,9 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
+        env: 
+         HOSTSFILE: 'testhosts.json'
+         PORT: 3000
     - run: npm ci
     - run: npm run build --if-present
     - run: npm test
