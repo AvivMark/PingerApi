@@ -1,5 +1,5 @@
 # PingerApi
-# Api service to monitor connectivity to your servers
+Api service to monitor connectivity to your servers
 
 ## Environment Variables
 
