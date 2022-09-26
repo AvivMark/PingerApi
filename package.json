@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "test": "env-cmd -f ./configs/test.env jest"
+    "test": "jest"
   },
   "jest": {
     "testEnvironment": "node"
@@ -17,7 +17,6 @@
   "dependencies": {
     "chalk": "^3.0.0",
     "dotenv": "^16.0.2",
-    "env-cmd": "^10.1.0",
     "express": "^4.17.1",
     "nodemon": "^2.0.7",
     "ping": "^0.4.1"
