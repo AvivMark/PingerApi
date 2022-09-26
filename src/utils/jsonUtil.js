@@ -1,5 +1,7 @@
 const fs = require("fs");
 const chalk = require("chalk");
+const hostsFilename = process.env.HOSTSFILE || "hosts.json"
+
 
 const addHost = (hostName, ip) => {
   const hosts = loadHosts();
@@ -17,40 +19,59 @@ const addHost = (hostName, ip) => {
       hosts.push(host);
 
       saveHosts(hosts);
-      console.log(chalk.bgGreen("New host added!"));
       return host
     } else {
-      console.log(chalk.bgRed("Host name already exist!"));
+      return 409;
     }
   } else {
-    console.log(chalk.bgRed("Host ip already exist!"));
+    return 409;
   }
 };
 
-const updateHostname = (oldName,newName) => {
+const updateHostname = (oldName, newName) => {
   const hosts = loadHosts();
-  let hostFound = hosts.find((host) => host.oldName === oldName);
-  if(hostFound){
-    hostFound.name = newName;
-    saveHosts(hosts);
-    return hostFound;
-  } else{
-    console.log("no host found with the name: "  + oldName)
-  }
+  hosts.forEach(host => {
+    if(host.name === oldName) {
+      host.name = newName;
+      saveHosts(hosts);
+      return host;
+    }
+  });
+
+  return 404;
+}
+
+const updateHostIP = (oldIp, newIp) => {
+  const hosts = loadHosts();
+  hosts.forEach(host => {
+    if(host.ip === oldIp) {
+      host.ip = newIp;
+      saveHosts(hosts);
+      return host;
+    }
+  });
+
+  return 404;
 
 }
 
-const updateHostIP = (oldIp,newIp) => {
+const removeHost = (hostData) =>{
   const hosts = loadHosts();
-  let hostFound = hosts.find((host) => host.ip == oldIp);
-  if(hostFound){
-    hostFound.ip = newIp;
-    saveHosts(hosts);
+  let hostFound = hosts.find((host) => host.ip === hostData);
+  if (hostFound) {
+    const removedHosts = hosts.filter((host) => host.ip !== hostData);
+    saveHosts(removedHosts);
     return hostFound;
-  } else{
-    console.log("no host found with the ip: "  + oldIp)
   }
 
+  hostFound = hosts.find((host) => host.name === hostData);
+  if (hostFound) {
+    const removedHosts = hosts.filter((host) => host.name !== hostData);
+    saveHosts(removedHosts);
+    return hostFound;
+  }
+
+  return 404;
 }
 
 const removeHostByName = (name) => {
@@ -59,10 +80,9 @@ const removeHostByName = (name) => {
 
   if (removedHosts.length < Hosts.length) {
     saveHosts(removedHosts);
-    console.log(chalk.bgGreen("Host removed Successfuly!"));
     return host;
   } else {
-    console.log(chalk.bgRed("No host found!"));
+    return 404;
   }
 };
 
@@ -75,7 +95,7 @@ const removeHostByIp = (ip) => {
       saveHosts(removedHosts);
       console.log(chalk.bgGreen("Host removed Successfuly!"));
     } else {
-      console.log(chalk.bgRed("No host found!"));
+      return 404;
     }
   };
 
@@ -89,7 +109,7 @@ const getHost = (hostdata) => {
   if (hostFound) {
     return hostFound
   }
-  console.log(chalk.red("Error! No host found with the data: " + hostdata))
+  return 404;
 }
 
 const getHostByIP = (ip) => {
@@ -97,10 +117,9 @@ const getHostByIP = (ip) => {
 
   const hostFound = hosts.find((host) => host.ip === ip);
   if (hostFound) {
-    console.log(chalk.inverse(hostFound.name));
     return hostFound
   } else {
-    console.log(chalk.red("Error! No host found with the ip: " + ip));
+    return 404;
   }
 };
 
@@ -113,7 +132,7 @@ const getHostByName = (name) => {
     console.log(chalk.inverse(hostFound.ip));
     return hostFound
   } else {
-    console.log(chalk.red("Error! No host found with the name: " + name));
+    return 404;
   }
 };
 
@@ -129,27 +148,35 @@ const removeAllHosts = () => {
 }
 
 const saveHosts = (hosts) => {
-  const dataJSON = JSON.stringify(hosts);
-  fs.writeFileSync("hosts.json", dataJSON);
+  try {
+    const dataJSON = JSON.stringify(hosts);
+    fs.writeFileSync(hostsFilename, dataJSON);
+  } catch (e) {
+    throw new Error("Cant save hosts")
+  }
 };
 
 const loadHosts = () => {
   try {
-    const dataBuffer = fs.readFileSync("hosts.json");
+    const dataBuffer = fs.readFileSync(hostsFilename);
     const dataJson = dataBuffer.toString();
     return JSON.parse(dataJson);
   } catch (e) {
+    throw new Error("Cant load hosts")
     return [];
   }
 };
 
 module.exports = {
     addHost,
+    removeHost,
     removeHostByName,
     removeHostByIp,
+    removeAllHosts,
     getHostByName,
     getHostByIP,
     getAllHosts,
-    removeAllHosts,
-    getHost
+    getHost,
+    updateHostIP,
+    updateHostname
 };
